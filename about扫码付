@@ -1,0 +1,174 @@
+京东扫码付相关：
+
+京东支付sdk下载：https://biz.jdpay.com/desktop/toMain.do?url=/product/techCenter.do&menuInfo=M43
+(访问https://biz.jdpay.com，注册并登陆》》商家服务》》技术集成)
+相关配置也在这个网站上完成。
+
+
+
+
+
+京东扫码付API列表：
+
+
+ 1、统一下单接口:
+        商户系统先调用该接口在京东支付服务后台生成交易单，再按扫码、APP等不同场景发起支付。
+        调用地址: https://paygate.jd.com/service/uniorder
+ 
+ 2、退款接口：
+        退款申请接口提供给商户发起自动退款的能力。如果用户在商户系统下单支付以后发起退款，商户验证通过之后可以自动发起退款请求。同时京东支付商户管理后台提供手动退款的功能。
+        调用地址：https://paygate.jd.com/service/refund
+ 3、查询接口：
+    交易查询接口是为了处理商户服务器长时间没有接收到支付结果的情况设计的。一般情况，支付结果会通过前端同步返回和京东支付服务器的异步通知发送到商户服务。但是为避免特殊情况商户服务器仍然没有接收到支付结果，这时候商户服务可以通过主动查询交易结果的接口查询支付状态。
+
+    消费查询（或支付查询） 调用地址：https://paygate.jd.com/service/query
+    退款查询              调用地址：https://paygate.jd.com/service/queryRefund              
+
+
+
+
+
+
+
+
+接口以及传参：
+
+
+ 1、统一下单(UnifiedOrder类)：
+    UnifiedOrder order = new UnifiedOrder.Builder().init("V2.0", "22294531", "百事可乐500ml", 1, "0", "http://jdpaydemo.jd.com/asynNotify.htm")
+                         .set参数名(参数值)//需要传递非必传参数时使用,如:setDevice("111")
+                         .build();
+    String qrCode = order.getQrCode();
+    
+请求参数： String version  //版本号；必传
+          String merchant //商户号；必传
+          String tradeNum //交易流水号；代码中自动生成；必传
+          String tradeName//交易名称；即商品名；必传
+          String tradeTime//交易时间；代码中自动生成；必传
+          Long amount     //交易金额；单位：分；必传
+          String orderType//订单类型；0-实物，1-虚拟；必传
+          String currency //货币种类；固定填CNY；由于固定填写，于是直接写死在代码中；必传
+          String notifyUrl//异步通知地址；支付完成后，异步通知商户；必传
+          String sign     //交易信息签名；根据传入参数自动生成；必传
+
+以下参数为非必传参数，如需传递，可在以上示例代码中使用.set参数名(参数值)传递
+
+          String device;//设备号
+          String payMerchant //收款商户账号(商户在商户系统的用户账号)
+          String tradeDesc //交易描述
+          String industryCategoryCode //订单业务类型
+          String note //商户备注
+          String callbackUrl //同步通知页面地址
+          String ip //用户IP
+          String specCardNo //用户指定卡号
+          String specId //用户指定身份证号
+          String specName //用户指定姓名
+          String userType //用户账号类型
+          String userId //用户账号
+          String tradeType //交易类型
+          Integer expireTime //订单失效时长
+          Integer orderGoodsNum //订单商品数量
+          String cert //商品公钥证书
+
+
+ 2、退款接口(Refund类)：
+    Refund refund = new Refund.Builder().init("V2.0", "22294531", "1489742600206",1)
+                    .set参数名(参数值)//需要传递非必传参数时使用
+                    .build();
+    String status = refund.getStatus();
+
+	  if(null != status){
+		  if("0".equals(status)){
+			  System.out.println("退款交易正在处理中!!!");
+		  }else if("1".equals(status)){
+			  System.out.println("退款成功!!");
+		  }else if("2".equals(status)){
+			  System.out.println("退款失败!!");
+		  }else if("3".equals(status)){
+			  System.out.println("退款失败,需要原单号发起重试!!");
+		  }else{
+			  System.out.println("状态码异常！");
+		  }
+	  }
+
+请求参数： String version  //版本号；必传
+          String merchant //商户号；必传
+          String tradeNum //交易流水号；代码中自动生成；必传
+          String oTradeNum //原交易流水号；即统一下单生成的交易流水号；必传
+          Long amount //交易金额；单位：分；必传
+          String currency //货币种类；固定填CNY；由于固定填写，于是直接写死在代码中；必传
+          String sign     //退款流水信息签名；根据传入参数自动生成；必传
+
+以下参数为非必传参数，如需传递，可在以上示例代码中使用.set参数名(参数值)传递
+
+          String tradeTime //交易时间；代码中自动生成；
+          String notifyUrl //交易通知地址
+          String note //交易备注
+          String cert //商户公钥证书
+
+
+ 3、查询接口(Query类)：
+    
+    消费(支付)查询：
+    Query query = new Query.Builder().init("V2.0", "22294531", "1489742600206", "0")
+                  .set参数名(参数值)//需要传递非必传参数时使用
+		              .build();
+    String status = query.getStatus();
+	  if(null != status){
+		  if("0".equals(status)){
+			  System.out.println("支付订单已创建,等待支付中!!!");
+		  }else if("1".equals(status)){
+			  System.out.println("支付订单处理中!!");
+		  }else if("2".equals(status)){
+			  System.out.println("支付成功!!");
+		  }else if("3".equals(status)){
+			  System.out.println("支付失败!!");
+		  }else if("4".equals(status)){
+			  System.out.println("支付订单已关闭!!");
+		  }
+	  }
+
+请求参数： String version  //版本号；必传
+          String merchant //商户号；必传
+          String tradeNum //即统一下单时的交易流水号；必传
+          Integer tradeType //交易类型；0-消费，1-退款；必传
+          String sign     //用户查询信息签名；根据传入参数自动生成；必传
+
+以下参数为非必传参数，如需传递，可在以上示例代码中使用.set参数名(参数值)传递
+
+          String cert //商户公钥证书
+
+
+
+    退款查询：
+    Query query = new Query.Builder().init("V2.0", "22294531", "1489742715335", "1")
+		              .setOTradeNum("1489742600206")  *******
+                  .set参数名(参数值)//需要传递非必传参数时使用
+		              .build();
+    String status = query.getStatus();
+	  if(null != status){
+		  if("0".equals(status)){
+			  System.out.println("退款交易正在处理中!!!");
+		  }else if("1".equals(status)){
+			  System.out.println("退款成功!!");
+		  }else if("2".equals(status)){
+			  System.out.println("退款失败!!");
+		  }
+	  }
+
+请求参数： String version  //版本号；必传
+          String merchant //商户号；必传
+          String tradeNum //即申请退款时的交易流水号；必传
+          String oTradeNum //原交易流水号；即统一下单时的交易流水号；必传(注:此处oTradeNum以setOTradeNum的形式传递，为必传！)  *********
+          Integer tradeType //交易类型；0-消费，1-退款；必传
+          String sign     //用户查询信息签名；根据传入参数自动生成；必传
+    
+以下参数为非必传参数，如需传递，可在以上示例代码中使用.set参数名(参数值)传递
+
+          String cert //商户公钥证书
+
+
+
+
+
+###另附开发接口文档，京东扫码支付关注 2.2；6.3；6.4；6.6；6.7
